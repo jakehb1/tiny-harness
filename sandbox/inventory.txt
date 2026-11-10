@@ -1,0 +1,4 @@
+# cluster inventory
+rack-a: 8x H100
+rack-b: 16x H100
+rack-c: 8x H100
