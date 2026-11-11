@@ -53,6 +53,19 @@ flowchart LR
 | loops | `harness/loop.py` | `bare_loop()` vs `Harness` (retries, validation, scratchpad, budget) |
 | trace | `harness/trace.py` | colored step-by-step terminal trace (`NO_COLOR=1` to disable) |
 
+## Reusing a Harness across tasks
+
+Every `run()` starts clean: fresh history and a fresh rescue count. Scratchpad notes are cleared too, unless you ask to keep them:
+
+```python
+h = Harness(model)
+h.run("What's the H100 hourly rate?")
+h.run("Summarize the inventory.")                   # starts with no notes
+h.run("Now price the whole cluster.", keep_notes=True)  # sees notes from earlier runs
+```
+
+Memory across tasks should be a choice, not a side effect. `python examples/two_tasks.py` shows both modes, and `python -m unittest discover -s tests` checks them.
+
 ## Add a tool
 
 ```python

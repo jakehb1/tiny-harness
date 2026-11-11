@@ -68,9 +68,9 @@ class Harness:
         self.max_steps = max_steps      # step budget
         self.max_retries = max_retries  # per step, for malformed / invalid calls
         self.trace = trace or Trace()
-        self.scratchpad = []            # simple memory, re-injected every step
+        self.scratchpad = []            # notes, re-injected every step (see run(keep_notes=...))
         self.history = []
-        self.rescues = 0
+        self.rescues = 0                # per run; reset at the start of every run()
 
     def _ask(self):
         msgs = [{"role": "system", "content": system_prompt(self.scratchpad)}] + self.history
@@ -96,8 +96,17 @@ class Harness:
                 self._push_back(reply, err)
         return None
 
-    def run(self, task):
+    def run(self, task, keep_notes=False):
+        """Run one task. Each run starts clean: fresh history and rescue count.
+
+        Notes from earlier runs are cleared unless keep_notes=True, so reusing a
+        Harness never leaks one task's scratchpad into the next by accident.
+        Pass keep_notes=True when you *want* memory across tasks.
+        """
         self.history = [{"role": "user", "content": task}]
+        self.rescues = 0
+        if not keep_notes:
+            self.scratchpad = []
         for n in range(1, self.max_steps + 1):
             self.trace.step(n, self.max_steps)
             obj = self._next_action()
